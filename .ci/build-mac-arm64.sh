@@ -21,6 +21,11 @@ brew_arm64_install_packages() {
 export HOMEBREW_NO_AUTO_UPDATE=1
 export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
 export HOMEBREW_NO_INSTALL_CLEANUP=1
+export LLVM_COMPILER_VER=16
+export QT_VER=6.7.3
+export QT_VER_MAIN=6
+
+arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 /usr/local/bin/brew update
 sudo rm -rf /usr/local/Cellar/curl /usr/local/opt/curl
