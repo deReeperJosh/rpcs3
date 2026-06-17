@@ -1757,7 +1757,7 @@ void spu_thread::init_spu_decoder()
 }
 
 spu_thread::spu_thread(lv2_spu_group* group, u32 index, std::string_view name, u32 lv2_id, bool is_isolated, u32 option)
-	: cpu_thread(idm::last_id())
+	: cpu_thread(idm::last_id<spu_thread>())
 	, group(group)
 	, index(index)
 	, thread_type(group ? spu_type::threaded : is_isolated ? spu_type::isolated : spu_type::raw)
@@ -1812,14 +1812,14 @@ void spu_thread::serialize_common(utils::serial& ar)
 	}
 	else
 	{
-		const u8 count = ar;
+		const u8 count{ar};
 		ar(std::span(vals, count));
 		ch_in_mbox.set_values(count, vals[0], vals[1], vals[2], vals[3]);
 	}
 }
 
 spu_thread::spu_thread(utils::serial& ar, lv2_spu_group* group)
-	: cpu_thread(idm::last_id())
+	: cpu_thread(idm::last_id<spu_thread>())
 	, group(group)
 	, index(ar)
 	, thread_type(group ? spu_type::threaded : ar.pop<u8>() ? spu_type::isolated : spu_type::raw)
@@ -6430,8 +6430,6 @@ extern void resume_spu_thread_group_from_waiting(spu_thread& spu, std::array<sha
 
 bool spu_thread::stop_and_signal(u32 code)
 {
-	spu_log.trace("stop_and_signal(code=0x%x)", code);
-
 	auto set_status_npc = [&]()
 	{
 		status_npc.atomic_op([&](status_npc_sync_var& state)
@@ -6445,6 +6443,8 @@ bool spu_thread::stop_and_signal(u32 code)
 
 	if (get_type() >= spu_type::raw)
 	{
+		spu_log.warning("stop_and_signal(code=0x%x)", code);
+
 		// Save next PC and current SPU Interrupt Status
 		state += cpu_flag::stop + cpu_flag::wait + cpu_flag::ret;
 		set_status_npc();
